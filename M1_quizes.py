@@ -176,3 +176,13 @@ print ("e = ", e)
 print ("e (magnitude) = ", np.linalg.norm(e))
 print ("r_hat = ", r_hat)
 print ("r_hat (norm) = ", np.linalg.norm(r_hat))
+
+#================================================
+#quiz 8 - Orbit Energy
+#================================================
+a = 8000*1000   #m
+vv = np.dot(v,v)
+
+r_o = 1/(vv/(2*mu) + 1/(2*a))
+
+print("orbit radius (in km) is r_orbit = ", r_o/1000)
