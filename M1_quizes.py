@@ -162,3 +162,17 @@ h_norm = np.linalg.norm(h)
 f_rate = h_norm/r_norm**2
 
 print("f_rate (deg/s): ", 180/pi*f_rate)
+
+#================================================
+#quiz 7 - Eccenricity Vector
+#================================================
+vt = np.array([5.57433, -0.92203, -3.00873])*1000   #m
+e = (1/mu)*np.cross(v,h) - r/np.linalg.norm(r)
+
+r_hat = (1/mu)*np.cross(vt,h) - e
+r_hat = r_hat/np.linalg.norm(r_hat)
+
+print ("e = ", e)
+print ("e (magnitude) = ", np.linalg.norm(e))
+print ("r_hat = ", r_hat)
+print ("r_hat (norm) = ", np.linalg.norm(r_hat))
