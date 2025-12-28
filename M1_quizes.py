@@ -188,7 +188,7 @@ from math import sin, cos, tan, atan, pi, sqrt
 # print("orbit radius (in km) is r_orbit = ", r_o/1000)
 
 #================================================
-#quiz 9 - 
+#quiz 9 - Fundamental Integrals & Kepler Equation
 #================================================
 # Exercise 3
 #================================================
