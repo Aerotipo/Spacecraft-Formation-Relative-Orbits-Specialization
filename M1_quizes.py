@@ -145,44 +145,80 @@ from math import sin, cos, tan, atan, pi, sqrt
 #================================================
 # Exercise 2
 #================================================
-mu = 398600441.8e6   #Earth geocentric gravitational constant
+# mu = 398600441.8e6   #Earth geocentric gravitational constant
 
-#Initial conditions
-r = np.array([2466.69, 5941.54, 3282.71])*1000   #m
-v = np.array([-6.80822, 1.04998, 3.61939])*1000  #m/s
-h = np.cross(r,v)
+# #Initial conditions
+# r = np.array([2466.69, 5941.54, 3282.71])*1000   #m
+# v = np.array([-6.80822, 1.04998, 3.61939])*1000  #m/s
+# h = np.cross(r,v)
 
-print("angular momentum per unit mass (km^2/s) h = ", h/(1000**2))
+# print("angular momentum per unit mass (km^2/s) h = ", h/(1000**2))
 
 #================================================
 # Exercise 3
 #================================================
-r_norm = 8000*1000 #m
-h_norm = np.linalg.norm(h)
-f_rate = h_norm/r_norm**2
+# r_norm = 8000*1000 #m
+# h_norm = np.linalg.norm(h)
+# f_rate = h_norm/r_norm**2
 
-print("f_rate (deg/s): ", 180/pi*f_rate)
+# print("f_rate (deg/s): ", 180/pi*f_rate)
 
 #================================================
 #quiz 7 - Eccenricity Vector
 #================================================
-vt = np.array([5.57433, -0.92203, -3.00873])*1000   #m
-e = (1/mu)*np.cross(v,h) - r/np.linalg.norm(r)
+# vt = np.array([5.57433, -0.92203, -3.00873])*1000   #m
+# e = (1/mu)*np.cross(v,h) - r/np.linalg.norm(r)
 
-r_hat = (1/mu)*np.cross(vt,h) - e
-r_hat = r_hat/np.linalg.norm(r_hat)
+# r_hat = (1/mu)*np.cross(vt,h) - e
+# r_hat = r_hat/np.linalg.norm(r_hat)
 
-print ("e = ", e)
-print ("e (magnitude) = ", np.linalg.norm(e))
-print ("r_hat = ", r_hat)
-print ("r_hat (norm) = ", np.linalg.norm(r_hat))
+# print ("e = ", e)
+# print ("e (magnitude) = ", np.linalg.norm(e))
+# print ("r_hat = ", r_hat)
+# print ("r_hat (norm) = ", np.linalg.norm(r_hat))
 
 #================================================
 #quiz 8 - Orbit Energy
 #================================================
-a = 8000*1000   #m
-vv = np.dot(v,v)
+# a = 8000*1000   #m
+# vv = np.dot(v,v)
 
-r_o = 1/(vv/(2*mu) + 1/(2*a))
+# r_o = 1/(vv/(2*mu) + 1/(2*a))
 
-print("orbit radius (in km) is r_orbit = ", r_o/1000)
+# print("orbit radius (in km) is r_orbit = ", r_o/1000)
+
+#================================================
+#quiz 9 - 
+#================================================
+# Exercise 3
+#================================================
+mu = 398600441.8e6  #Earth geocentric gravitational constant
+e = 0.05            #eccentricity (ellipse)
+a = 7500*1000       #[m] semi-major axis
+fo = 25*pi/180      #initial true anomaly
+dT = 3600           #[s] elapsed time
+
+n = sqrt(mu/a**3)
+print("mean orbit rate: ",n)
+print("the orbital period is {} hours".format(2*pi/n/3600))
+
+Eo = 2*atan(sqrt((1-e)/(1+e))*tan(fo/2))
+Mo = Eo - e*sin(Eo)
+Mf = Mo + n*dT
+
+#Newton-Raphson method
+eps = 1e-6    #residual value
+E = Mo        #seed value (recommended)
+Residual = Mf - E +e*sin(E)
+
+while abs(Residual) > eps:
+    dResidual = e*cos(E) - 1
+    E -= Residual/dResidual
+    Residual = Mf - E + e*sin(E)
+    print(Residual)
+
+f = 2*atan(sqrt((1+e)/(1-e))*tan(E/2))
+if f < 0:
+    f = f + 2*pi
+print("true anomaly after {0} seconds = {1}".format(dT,f))
+print((f)*180/pi)
