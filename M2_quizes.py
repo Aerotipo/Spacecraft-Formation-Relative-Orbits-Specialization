@@ -3,7 +3,7 @@ import numpy as np
 from math import sin, cos, tan, atan, pi, sqrt
 
 #===================================
-#quiz 1 - Lagrande Matrix
+#quiz 1 - Lagrange Matrix
 #===================================
 # exercise 4
 #===================================
