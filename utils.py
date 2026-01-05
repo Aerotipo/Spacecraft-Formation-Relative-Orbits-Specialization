@@ -180,3 +180,62 @@ def cartesian_2_orbitelement(mu, rVEC, vVEC):
     
     return sma, ecc, inc*pi/180, AN*pi/180, AP*pi/180, f
 
+
+def Inertial_2_Hill_mapping(rc_N,vc_N,rd_N,vd_N):
+    """This function maps the inertial (ECI) position and velocity of the chief and deputy
+    satellites, to the orbital or LVLH or Hills frame (centred in the chief)
+    Inputs:
+      rc_N [ndarray]: position vector of the chief satellite expressed in ECI cartesian coordinates, in [m];
+      vc_N [ndarray]: velocity vector of the chief satellite expressed in ECI cartesian coordinates, [m/s];
+      rd_N [ndarray]: position vector of the deputy satellite expressed in ECI cartesian coordinates, in [m];
+      vd_N [ndarray]: velocity vector of the deputy satellite expressed in ECI cartesian coordinates, [m/s];
+    Outputs:
+      rho_H [ndarray]: relative position vector of deputy as seen by chief in Hills coordinate frame, in [m];
+      rhoP_H [ndarray]: relative velocity vector (rho prime) of deputy as seen by chief in Hills coordinate frame, in [m/s]
+    """
+    h_N = np.cross(rc_N,vc_N)
+    h_norm = np.linalg.norm(h_N)
+    rc_norm = np.linalg.norm(rc_N)
+    o_r = rc_N/rc_norm
+    o_h = h_N/h_norm
+    o_t = np.cross(o_h, o_r)
+    ON = np.array([o_r, o_t, o_h])
+    w_ON_H = (h_norm/rc_norm**2)*o_h
+
+    rho_H = np.dot(ON, rd_N - rc_N)
+    rhoP_H = np.dot(ON, vd_N - vc_N) - np.cross(w_ON_H, rho_H)
+
+    return rho_H, rhoP_H
+
+
+
+def Hill_2_Inertial_mapping(rc_N,vc_N,rho_H,rhoP_H):
+    """This function maps the inertial (ECI) position and velocity of the chief and deputy
+    satellites, to the orbital or LVLH or Hills frame (centred in the chief)
+    Inputs:
+      rc_N [ndarray]: position vector of the chief satellite expressed in ECI cartesian coordinates, in [m];
+      vc_N [ndarray]: velocity vector of the chief satellite expressed in ECI cartesian coordinates, [m/s];
+      rho_H [ndarray]: relative position vector of deputy as seen by chief in Hills coordinate frame, in [m];
+      rhoP_H [ndarray]: relative velocity vector (rho prime) of deputy as seen by chief in Hills coordinate frame, in [m/s]
+    Outputs:
+      rd_N [ndarray]: position vector of the deputy satellite expressed in ECI cartesian coordinates, in [m];
+      vd_N [ndarray]: velocity vector of the deputy satellite expressed in ECI cartesian coordinates, [m/s];
+    """
+    h_N = np.cross(rc_N,vc_N)
+    h_norm = np.linalg.norm(h_N)
+    rc_norm = np.linalg.norm(rc_N)
+    o_r = rc_N/rc_norm
+    o_h = h_N/h_norm
+    o_t = np.cross(o_h, o_r)
+    NO = np.transpose(np.array([o_r, o_t, o_h]))
+    w_ON_H = (h_norm/rc_norm**2)*o_h
+
+    rd_N = np.dot(NO, rho_H) + rc_N
+    vd_N = vc_N + np.dot(NO, rhoP_H + np.cross(w_ON_H,rho_H))
+
+    return rd_N, vd_N 
+
+
+
+
+
