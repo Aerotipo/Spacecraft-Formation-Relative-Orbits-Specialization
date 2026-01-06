@@ -13,6 +13,24 @@ Created on December 2025
 import numpy as np
 from math import sin, cos, tan, asin, acos, atan, atan2, sqrt, pi
 
+def a_J2(r, mu, J2, r_eq):
+    """This function generates the disturbance acceleration a_J2 produced by J2
+    as a function of the position r in cartesian coordinates.
+    Input: 
+      r = np.array(x,y,z) --> satellite position
+    Output: 
+      a = np.array(a_x, a_y, a_z)"""
+    x = r[0]
+    y = r[1]
+    z = r[2]
+    rnorm = np.linalg.norm(r)
+    ax = (1 - 5*(z/rnorm)**2)*(x/rnorm)
+    ay = (1 - 5*(z/rnorm)**2)*(y/rnorm)
+    az = (3 - 5*(z/rnorm)**2)*(z/rnorm)
+
+    return (-3/2*J2*(mu/rnorm**2)*(r_eq/rnorm)**2)*np.array([ax,ay,az])
+
+
 def trueanomaly_2_meananomaly(f,e):
     """Given the true anomaly f this function calculates the mean anomaly M using Kepler's equations.
     Inputs:
@@ -49,7 +67,7 @@ def meananomaly_2_trueanomaly(M,e):
         
     return 2*atan(sqrt((1+e)/(1-e))*tan(E/2))
 
-def f_dot(f,n,e,t_step):
+def compute_f_dot(f,n,e,t_step):
     """Given the true anomaly f and the orbital parameters, this function calculates the rate f_dot
     numerically using a time step defined by t_step.
     Inputs:
@@ -131,7 +149,7 @@ def orbitelement_2_cartesian(mu,a,e,i,ohm,w,f):
     theta = w + f
     p = a*(1-e)*(1+e)
     r_norm = p/(1 + e*cos(f))
-    fdot = f_dot(f,n,e,t_step=0.001)
+    fdot = compute_f_dot(f,n,e,t_step=0.001)
     h = fdot*r_norm**2
     
     r_ix = cos(ohm)*cos(theta) - sin(ohm)*sin(theta)*cos(i)
@@ -143,8 +161,7 @@ def orbitelement_2_cartesian(mu,a,e,i,ohm,w,f):
     v_iy = sin(ohm)*( sin(theta) + e*sin(w) ) - cos(ohm)*( cos(theta) + e*cos(w) )*cos(i)
     v_iz = -( cos(theta) + e*cos(w) )*sin(i)
     v = -(mu/h)*np.array([v_ix, v_iy, v_iz])
-    print(np.linalg.norm(np.cross(r,v)))
-
+    
     return r, v
     
 
