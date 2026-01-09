@@ -1,0 +1,3 @@
+commit 19; quiz 4 "general equations of motion", exercise 2. The propagators for: (i) inertial ODE integrator, (ii) Kepler Equations, (iii) Relative EOM ODE integrator seem to be working all fine. The integrators (i) and (ii) lead to similar results within 6 digits precision.
+Nevertheless, when mapping from inertial (ECI) frame to Hill-frame, there are discrepancies between [(i)-(ii)] and (iii) on the deputy inertial position and velocity. The discrepancy is proportional to the integration time. This subject requires further investigation.
+Recommendation: investigate the mathematical formulation of the general relative EOM to see if there is something missing in the code, relative to the formulation.
