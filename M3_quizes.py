@@ -46,9 +46,9 @@ from utils import *
 # # print("rho_H (check) = ", rho_H_check/1000," km" )
 # # print("rhoP_H (check) = ", rhoP_H_check/1000, " km/s")
 
-# # #===================================
-# # # exercise 3
-# # #===================================
+# #===================================
+# # exercise 3
+# #===================================
 # x = 10          #km
 # y = 500         #km
 # r = 7000        #km
@@ -56,14 +56,7 @@ from utils import *
 # y_dot = -0.1    #km/s
 # r_dot = 0.05    #km/s
 
-
-# rd = sqrt((r + x)**2 + y**2)
-# delta_r = rd - r
-# s = r*atan(y/(r+x))
-# rd_dot = 1/(sqrt((x + r)**2 + y**2))*((x + r)*(x_dot + r_dot) + y*y_dot )
-# delta_r_dot = rd_dot - r_dot
-# aux = y/(r+x)
-# s_dot = r_dot*atan(aux) + ( r/(1 + (aux)**2) )*( y_dot/(r+x) - y*(r_dot + x_dot)/(r+x)**2 )
+# delta_r, delta_r_dot, s, s_dot = Rectilinear_2_Curvilinear_mapping(x,y,r,x_dot,y_dot, r_dot)
 
 # print("exercise 3 results")
 # print("delta_r = ", delta_r)
@@ -72,9 +65,9 @@ from utils import *
 # print("s_dot = ", s_dot)
 # print("\b")
 
-# # #===================================
-# # # exercise 4
-# # #===================================
+#===================================
+# exercise 4
+#===================================
 # dr = 10         #km
 # s =  500        #km
 # r = 7000        #km
@@ -82,15 +75,7 @@ from utils import *
 # s_dot = -0.1    #km/s
 # r_dot = 0.05    #km/s
 
-# delta_theta = s/r
-# delta_theta_dot = s_dot/r - s*r_dot/r**2
-# rd = r + dr
-# rd_dot = r_dot + dr_dot
-
-# x = rd*cos(delta_theta) - r
-# y = rd*sin(delta_theta)
-# x_dot = rd_dot*cos(delta_theta) - rd*sin(delta_theta)*delta_theta_dot - r_dot
-# y_dot = rd_dot*sin(delta_theta) + rd*cos(delta_theta)*delta_theta_dot
+# x, x_dot, y, y_dot = Curvilinear_2_Rectilinear_mapping(dr, s, r, dr_dot, s_dot, r_dot)
 
 # print("exercise 4 results")
 # print("x = ", x)
@@ -99,35 +84,36 @@ from utils import *
 # print("y_dot = ", y_dot)
 # print("\b")
 
-#==============================================
-#quiz 4 - General Relative Equations of Motion
-#==============================================
-# exercise 2 - Task 1
-#===================================
-# mu = 398600441.8e6   #Earth geocentric gravitational constant
-mu = 398600000.0e6   #Earth geocentric gravitational constant
+# #==============================================
+# #quiz 4 - General Relative Equations of Motion
+# #==============================================
+# # exercise 2 - Task 1
+# #===================================
+# # mu = 398600441.8e6   #Earth geocentric gravitational constant
+# mu = 398600000.0e6   #Earth geocentric gravitational constant
 
-#Initial conditions (chief & deputy satellites) in ECI frame (N):
-rc_N_0 = np.array([-6685.20926, 601.51244, 3346.066634])*1000   #m
-vc_N_0 = np.array([-1.74294, -6.70242, -2.27739])*1000          #m/s
-rho_H_0 = np.array([-81.22301, 248.14201, 94.95904])*1000     #[m] deputy satellite relative pos in H-frame
-rhoP_H_0 = np.array([0.47884, 0.14857, 0.13577])*1000        #[m/s] deputy satellite relative vel in H-frame
+# #Initial conditions of chief in ECI frame (N):
+# rc_N_0 = np.array([-6685.20926, 601.51244, 3346.066634])*1000.   #m
+# vc_N_0 = np.array([-1.74294, -6.70242, -2.27739])*1000.          #m/s
+# #Initial conditions of deputy in Hill frame:
+# rho_H_0 = np.array([-81.22301, 248.14201, 94.95904])*1000.     #[m] deputy satellite relative pos in H-frame
+# rhoP_H_0 = np.array([0.47884, 0.14857, 0.13577])*1000.        #[m/s] deputy satellite relative vel in H-frame
 
-#Mapping deputy rd, vd from Hill frame to inertial:
+# #Mapping deputy rd, vd from Hill frame to inertial:
 
-rd_N_0, vd_N_0 = Hill_2_Inertial_mapping(rc_N_0,vc_N_0,rho_H_0,rhoP_H_0)
+# rd_N_0, vd_N_0 = Hill_2_Inertial_mapping(rc_N_0,vc_N_0,rho_H_0,rhoP_H_0)
 
-print("Results:")
-print("initial_rd_N = ", rd_N_0/1000," km" )
-print("initial_vd_N = ", vd_N_0/1000, " km/s")
-print("\b")
+# print("Results:")
+# print("initial_rd_N = ", rd_N_0/1000.," km" )
+# print("initial_vd_N = ", vd_N_0/1000., " km/s")
+# print("\b")
 
-#Time domain
-time_lapse = 2000     #seconds
-dt = 0.001          #time step
-t = np.arange(0, time_lapse + dt, dt)
+# #Time domain
+# time_lapse = 2000     #seconds
+# dt = 0.001          #time step
+# t = np.arange(0, time_lapse + dt, dt)
 
-# #METHOD 1A --> Using cartesian ECI coordinates and a [first order] ODE integrator
+# # #METHOD 1A --> Using cartesian ECI coordinates and a [first order] ODE integrator
 # print("---------------------------------------------------------------------------------------")
 # print("**** METHOD 1-A: Using cartesian ECI coordinates and a [first order] ODE integrator ****")
 # print("\b")
@@ -143,10 +129,10 @@ t = np.arange(0, time_lapse + dt, dt)
 # vc = vc_N_0.copy()
 # rd = rd_N_0.copy()
 # vd = vd_N_0.copy()
-# rc_history[0,:] = rc/1000   #km
-# vc_history[0,:] = vc/1000   #km/s
-# rd_history[0,:] = rd/1000   #km
-# vd_history[0,:] = vd/1000   #km/s
+# rc_history[0,:] = rc/1000.   #km
+# vc_history[0,:] = vc/1000.   #km/s
+# rd_history[0,:] = rd/1000.   #km
+# vd_history[0,:] = vd/1000.   #km/s
 
 # for i,ti in enumerate(t):
 #     #chief integration of inertial equations of motion
@@ -154,16 +140,16 @@ t = np.arange(0, time_lapse + dt, dt)
 #     rc_dot_dot = -(mu/rc_norm**3)*rc
 #     vc += rc_dot_dot*dt
 #     rc += vc*dt
-#     rc_history[i+1,:]=rc/1000
-#     vc_history[i+1,:]=vc/1000
+#     rc_history[i+1,:]=rc/1000.
+#     vc_history[i+1,:]=vc/1000.
     
 #     #deputy satellite integration of inertial equations of motion
 #     rd_norm = np.linalg.norm(rd)
 #     rd_dot_dot = -(mu/rd_norm**3)*rd
 #     vd += rd_dot_dot*dt
 #     rd += vd*dt
-#     rd_history[i+1,:]=rd/1000
-#     vd_history[i+1,:]=vd/1000
+#     rd_history[i+1,:]=rd/1000.
+#     vd_history[i+1,:]=vd/1000.
     
 # print("chief position [in km] at {} seconds: rc_N = ".format(t[-1]),rc_history[-1])
 # print("chief velocity [in km/s] at {} seconds: vc_N = ".format(t[-1]),vc_history[-1])
@@ -174,138 +160,390 @@ t = np.arange(0, time_lapse + dt, dt)
 # #Mapping back deputy position and velocity from inertial to Hill frame
 # rho_H, rhoP_H = Inertial_2_Hill_mapping(rc,vc,rd,vd)
 # print("Final position of deputy in Hill frame")
-# print("final_rho_H = ", rho_H/1000," km" )
-# print("final_rhoP_H = ", rhoP_H/1000, " km/s")
+# print("final_rho_H = ", rho_H/1000.," km" )
+# print("final_rhoP_H = ", rhoP_H/1000., " km/s")
 # print("\b") 
 
-#plot results
+# #plot results
+# # ax = plt.figure().add_subplot(projection='3d')
+# # ax.plot(rc_history[:,0],rc_history[:,1],rc_history[:,2], 'b', label='chief trajectory (in km)')
+# # ax.plot(rd_history[:,0],rd_history[:,1],rd_history[:,2], 'r', label='deputy trajectory (in km)')
+# # ax.legend()
+# # plt.show()
+
+# #METHOD 1-B: Using cartesian ECI coordinates and Kepler equations for time of flight
+# print("---------------------------------------------------------------------------------------")
+# print("**** METHOD 1-B: Using cartesian ECI coordinates and Kepler equations ****")
+# print("\b")
+
+# # Chief satellite time of flight:
+# #print("Chief satellite time of flight:")
+# #print("\b")
+# sma, ecc, inc, AN, AP, f_initial = cartesian_2_orbitelement(mu, rc_N_0, vc_N_0)
+# n = sqrt(mu/sma**3)
+# #print("chief semi-major axis [km] = ", sma/1000)
+# #print("chief eccentricity = ", ecc)
+# #print("chief inclination [rad] = ", inc)
+# #print("chief Ascending Node [rad] = ", AN)
+# #print("chief Argument of Periapsis [rad] = ", AP)
+# #print("chief initial true anomaly f [rad] = ", f_initial)
+# #print("chief orbital period: {} hours".format(2*pi/n/3600))
+# M_initial = trueanomaly_2_meananomaly(f_initial, ecc)
+# M_final = M_initial + sqrt(mu/sma**3)*time_lapse
+# f_final = meananomaly_2_trueanomaly(M_final,ecc)
+# #print("chief final true anomaly f [rad] = ", f_final)
+# #print("\b")
+# rc_N_f, vc_N_f = orbitelement_2_cartesian(mu,sma,ecc,inc,AN,AP,f_final)
+
+# # Deputy satellite time of flight:
+# #print("Deputy satellite time of flight:")
+# #print("\b")
+# sma, ecc, inc, AN, AP, f_initial = cartesian_2_orbitelement(mu, rd_N_0, vd_N_0)
+# n = sqrt(mu/sma**3)
+# #print("deputy semi-major axis [km] = ", sma/1000)
+# #print("deputy eccentricity = ", ecc)
+# #print("deputy inclination [rad] = ", inc)
+# #print("deputy Ascending Node [rad] = ", AN)
+# #print("deputy Argument of Periapsis [rad] = ", AP)
+# #print("deputy initial true anomaly f [rad] = ", f_initial)
+# #print("deputy orbital period: {} hours".format(2*pi/n/3600))
+# M_initial = trueanomaly_2_meananomaly(f_initial, ecc)
+# M_final = M_initial + sqrt(mu/sma**3)*time_lapse
+# f_final = meananomaly_2_trueanomaly(M_final,ecc)
+# #print("deputy final true anomaly f [rad] = ", f_final)
+# #print("\b")
+# # f_final += 2*pi  #--> check
+# rd_N_f, vd_N_f = orbitelement_2_cartesian(mu,sma,ecc,inc,AN,AP,f_final)
+
+# print("final results (Kepler):")
+# print("(Kepler) chief position [in km] at {0} seconds: rc_N = {1}".format(time_lapse,rc_N_f/1000.))
+# print("(Kepler) chief velocity [in km/s] at {0} seconds: vc_N = {1}".format(time_lapse,vc_N_f/1000.))
+# print("(Kepler) deputy position [in km] at {0} seconds: rd_N = {1}".format(time_lapse,rd_N_f/1000.))
+# print("(Kepler) deputy velocity [in km/s] at {0} seconds: vd_N = {1}".format(time_lapse,vd_N_f/1000.))
+# print("\b")
+
+# #Mapping back deputy position and velocity from inertial to Hill frame
+# rho_H_f, rhoP_H_f = Inertial_2_Hill_mapping(rc_N_f,vc_N_f,rd_N_f,vd_N_f)
+# print("Final position of deputy in Hill frame:")
+# print("Mapping: Inertial ==> Hill:")
+# print("(Kepler) final_rho_H = ", rho_H_f/1000.," km" )
+# print("(Kepler) final_rhoP_H = ", rhoP_H_f/1000., " km/s")
+# print("\b") 
+
+
+# # #METHOD 2 --> Using Non Linear Relative Orbit EOM (Hill frame) and a [first order] ODE integrator
+# print("---------------------------------------------------------------------------------------")
+# print("**** METHOD 2: Integrating the general relative equations of motion in the Hill Frame ****")
+# print("\b")
+
+# #Initial conditions (H-frame relative position & velocity)
+# rc = rc_N_0.copy()
+# vc = vc_N_0.copy()
+# rho = rho_H_0.copy()
+# rhoP = rhoP_H_0.copy()
+
+# h = np.cross(rc,vc)
+# o_hat_r = rc/np.linalg.norm(rc)   #radial direction (unit vector)
+# x = rho[0]
+# y = rho[1]
+# z = rho[2]
+# x_dot = rhoP[0]
+# y_dot = rhoP[1]
+# z_dot = rhoP[2]
+
+# #history list creation
+# x_history = np.zeros([len(t)+1,3])
+# y_history = np.zeros([len(t)+1,3])
+# z_history = np.zeros([len(t)+1,3])
+
+# #Main loop
+# x_history[0,:] = x
+# y_history[0,:] = y
+# z_history[0,:] = z 
+
+# for i, ti in enumerate(t):
+#     rc_norm = np.linalg.norm(rc)
+#     rc_dot_norm = np.dot(vc,o_hat_r)
+#     rd_norm = sqrt((rc_norm + x)**2 + y**2 + z**2)
+#     fdot = np.linalg.norm(h)/rc_norm**2
+#     #relative position propagation
+#     x_dot_dot = (-mu/rd_norm**3)*(rc_norm + x) + 2*fdot*(y_dot - y*rc_dot_norm/rc_norm) + x*fdot**2 + mu/rc_norm**2
+#     y_dot_dot = (-mu/rd_norm**3)*y - 2*fdot*(x_dot - x*rc_dot_norm/rc_norm) + y*fdot**2
+#     z_dot_dot = (-mu/rd_norm**3)*z
+#     x_dot += x_dot_dot*dt
+#     x += x_dot*dt
+#     y_dot += y_dot_dot*dt
+#     y += y_dot*dt
+#     z_dot += z_dot_dot*dt
+#     z += z_dot*dt
+#     #chief satellite orbit propagation
+#     rc_dot_dot = -(mu/rc_norm**3)*rc
+#     vc += rc_dot_dot*dt
+#     rc += vc*dt
+#     h = np.cross(rc,vc)
+#     o_hat_r = rc/np.linalg.norm(rc)
+#     #history update
+#     x_history[i+1,:] = x/1000
+#     y_history[i+1,:] = y/1000
+#     z_history[i+1,:] = z/1000
+
+# rho_H_final = np.array([x,y,z])
+# rhoP_H_final = np.array([x_dot,y_dot,z_dot])
+# rc_N_final = rc.copy()
+# vc_N_final = vc.copy()
+
+# print("final results (Relative ODE):")
+# print("Final position of deputy in Hill frame")
+# print("(Relative ODE) final_rho_H = ", rho_H_final/1000," km" )
+# print("(Relative ODE) final_rhoP_H = ", rhoP_H_final/1000, " km/s")
+# print("\b")
+# print("(Relative ODE) chief position [in km] at {0} seconds: rc_N = {1}".format(time_lapse,rc_N_final/1000))
+# print("(Relative ODE) chief velocity [in km/s] at {0} seconds: vc_N = {1}".format(time_lapse,vc_N_final/1000))
+
+# #Map back from Hill frame to inertial
+# rd_N_final, vd_N_final = Hill_2_Inertial_mapping(rc_N_final,vc_N_final,rho_H_final,rhoP_H_final)
+# print("Mapping: Hill ==> Inertial:")
+# print("(Relative ODE) deputy position [in km] at {0} seconds: rd_N = {1}".format(time_lapse,rd_N_final/1000))
+# print("(Relative ODE) deputy velocity [in km/s] at {0} seconds: vd_N = {1}".format(time_lapse,vd_N_final/1000))
+# print("\b") 
+
+# #==============================================
+# #quiz 5 - Linearized General Relative EOM
+# #==============================================
+# # exercise 2
+# #===================================
+# # mu = 398600441.8e6   #Earth geocentric gravitational constant
+# mu = 398600000.0e6   #Earth geocentric gravitational constant
+
+# #Initial conditions of chief in ECI frame (N):
+# rc_N_0 = np.array([-6685.20926, 601.51244, 3346.066634])*1000   #m
+# vc_N_0 = np.array([-1.74294, -6.70242, -2.27739])*1000          #m/s
+# #Initial conditions of deputy in Hill frame
+# rho_H_0 = np.array([-81.22301, 248.14201, 94.95904])*1000     #[m] deputy satellite relative pos in H-frame
+# rhoP_H_0 = np.array([0.47884, 0.14857, 0.13577])*1000        #[m/s] deputy satellite relative vel in H-frame
+
+# #Time domain
+# time_lapse = 2000     #seconds
+# dt = 0.001          #time step
+# t = np.arange(0, time_lapse + dt, dt)
+
+# #METHOD 3 --> Using linearized Relative Orbit EOM and a [first order] ODE integrator
+# print("---------------------------------------------------------------------------------------")
+# print("**** METHOD 3: Integrating the linearized relative equations of motion in the Hill Frame ****")
+# print("\b")
+
+# #Initial conditions (H-frame relative position & velocity)
+# rc = rc_N_0.copy()
+# vc = vc_N_0.copy()
+# rho = rho_H_0.copy()
+# rhoP = rhoP_H_0.copy()
+
+# h = np.cross(rc,vc)
+# o_hat_r = rc/np.linalg.norm(rc)   #radial direction (unit vector)
+# x = rho[0]
+# y = rho[1]
+# z = rho[2]
+# x_dot = rhoP[0]
+# y_dot = rhoP[1]
+# z_dot = rhoP[2]
+
+# #history list creation
+# x_history = np.zeros([len(t)+1,3])
+# y_history = np.zeros([len(t)+1,3])
+# z_history = np.zeros([len(t)+1,3])
+
+# #Main loop
+# x_history[0,:] = x
+# y_history[0,:] = y
+# z_history[0,:] = z 
+
+# for i, ti in enumerate(t):
+#     rc_norm = np.linalg.norm(rc)
+#     rc_dot_norm = np.dot(vc,o_hat_r)
+#     fdot = np.linalg.norm(h)/rc_norm**2
+#     p = np.dot(h,h)/mu
+#     #relative position propagation
+#     x_dot_dot = x*fdot**2*(1 + 2*rc_norm/p) + 2*fdot*(y_dot - y*rc_dot_norm/rc_norm)
+#     y_dot_dot = y*fdot**2*(1 - rc_norm/p) - 2*fdot*(x_dot - x*rc_dot_norm/rc_norm)
+#     z_dot_dot = -(rc_norm/p*fdot**2)*z
+#     x_dot += x_dot_dot*dt
+#     x += x_dot*dt
+#     y_dot += y_dot_dot*dt
+#     y += y_dot*dt
+#     z_dot += z_dot_dot*dt
+#     z += z_dot*dt
+#     #chief satellite orbit propagation
+#     rc_dot_dot = -(mu/rc_norm**3)*rc
+#     vc += rc_dot_dot*dt
+#     rc += vc*dt
+#     h = np.cross(rc,vc)
+#     o_hat_r = rc/np.linalg.norm(rc)
+#     #history update
+#     x_history[i+1,:] = x/1000
+#     y_history[i+1,:] = y/1000
+#     z_history[i+1,:] = z/1000
+
+# rho_H_final = np.array([x,y,z])
+# rhoP_H_final = np.array([x_dot,y_dot,z_dot])
+
+# print("Final position of deputy in Hill frame (Linealized Relative ODE)")
+# print("final_rho_H (relative ODE) = ", rho_H_final/1000," km" )
+# print("final_rhoP_H (relative ODE) = ", rhoP_H_final/1000, " km/s")
+# print("\b") 
+
+#==============================================
+#quiz 6 - CWH Equations
+#==============================================
+# exercise 1
+#===================================
+# mu = 398600000.0e6   #Earth geocentric gravitational constant
+# sma = 6800*1000      # [m], chief orbit semi-major axis
+
+# #Chief orbit rate:
+# n = sqrt(mu/sma**3)
+
+# #Initial relative conditions:
+# rho_H_0 = np.array([1.299038, -1.0000, 0.3213938])*1000     #[m] deputy satellite relative pos in H-frame
+# rhoP_H_0 = np.array([-0.000844437, -0.00292521, -0.000431250])*1000        #[m/s] deputy satellite relative vel in H-frame
+
+# #Time domain
+# time_lapse = 1300     #seconds
+# dt = 0.001         #time step
+# t = np.arange(0, time_lapse + dt, dt)
+
+# print("---------------------------------------------------------------------------------------")
+# print("**** Numerical integration of CWH equations of motion in the Hill Frame ****")
+# print("\b")
+
+# #Initial conditions (H-frame relative position & velocity)
+# rho = rho_H_0.copy()
+# rhoP = rhoP_H_0.copy()
+
+# x = rho[0]
+# y = rho[1]
+# z = rho[2]
+# x_dot = rhoP[0]
+# y_dot = rhoP[1]
+# z_dot = rhoP[2]
+
+# #history list creation
+# rho_H_history = np.zeros([len(t)+1,3])
+
+# #Main loop
+# rho_H_history[0,:] = rho/1000
+
+
+# for i, ti in enumerate(t):
+#     #relative position propagation
+#     x_dot_dot = 2*n*y_dot + 3*n**2*x
+#     y_dot_dot = -2*n*x_dot
+#     z_dot_dot = -n**2*z
+#     x_dot += x_dot_dot*dt
+#     x += x_dot*dt
+#     y_dot += y_dot_dot*dt
+#     y += y_dot*dt
+#     z_dot += z_dot_dot*dt
+#     z += z_dot*dt
+#     #history update
+#     rho_H_history[i+1,:] = np.array([x,y,z])/1000   #km
+    
+# rho_H_final = np.array([x,y,z])
+# rhoP_H_final = np.array([x_dot,y_dot,z_dot])
+
+# print("Final position of deputy in Hill frame (CWH equations) at {} seconds".format(t[-1]))
+# print("final_rho_H (CWH equations) = ", rho_H_final/1000," km" )
+# print("final_rhoP_H (CWH equations) = ", rhoP_H_final/1000, " km/s")
+# print("\b")
+
+# #plot results
 # ax = plt.figure().add_subplot(projection='3d')
-# ax.plot(rc_history[:,0],rc_history[:,1],rc_history[:,2], 'b', label='chief trajectory (in km)')
-# ax.plot(rd_history[:,0],rd_history[:,1],rd_history[:,2], 'r', label='deputy trajectory (in km)')
+# ax.plot(rho_H_history[:,0],rho_H_history[:,1],rho_H_history[:,2], 'r', label='deputy relative trajectory (in km)')
 # ax.legend()
 # plt.show()
 
-#METHOD 1-B: Using cartesian ECI coordinates and Kepler equations
+
+#===================================
+# exercise 2
+#===================================
+mu = 398600000.0e6   #Earth geocentric gravitational constant
+time_lapse = 2000    #seconds
+
+# chief circular motion in inertial frame:
+rc = 7500*1000         # [m], chief orbit semi-major axis
+n = sqrt(mu/rc**3)    # rad/s
+
+#deputy relative motion in Hill-frame:
+y_off = 200*1000    #[m], Hill-frame deputy relative position
+
+#Initial conditions of chief (inertial frame)
+fc_initial = 0                   #initial true anomaly (arbitrarily defined)
+rc_N_0 = rc*np.array([cos(fc_initial), sin(fc_initial), 0])
+vc_N_0 = n*rc*np.array([cos(fc_initial+pi/2), sin(fc_initial+pi/2), 0])
+# #Initial conditions (H-frame relative position & velocity)
+rho_H_0 = np.array([0, y_off, 0])
+rhoP_H_0 = np.array([0, 0, 0])
+
+#Mapping deputy rd, vd from Hill frame to inertial:
+
+rd_N_0, vd_N_0 = Hill_2_Inertial_mapping(rc_N_0,vc_N_0,rho_H_0,rhoP_H_0)
+
+print("Results:")
+print("initial_rd_N = ", rd_N_0/1000.," km" )
+print("initial_vd_N = ", vd_N_0/1000., " km/s")
+print("\b")
+
+#Time domain
+time_lapse = 2000     #seconds
+dt = 0.001          #time step
+t = np.arange(0, time_lapse + dt, dt)
+
+# #METHOD 1A --> Using cartesian ECI coordinates and a [first order] ODE integrator
 print("---------------------------------------------------------------------------------------")
-print("**** METHOD 1-B: Using cartesian ECI coordinates and Kepler equations ****")
+print("**** METHOD 1-A: Using cartesian ECI coordinates and a [first order] ODE integrator ****")
 print("\b")
 
-# Chief satellite time of flight:
-print("Chief satellite time of flight:")
-print("\b")
-sma, ecc, inc, AN, AP, f_initial = cartesian_2_orbitelement(mu, rc_N_0, vc_N_0)
-n = sqrt(mu/sma**3)
-print("chief semi-major axis [km] = ", sma/1000)
-print("chief eccentricity = ", ecc)
-print("chief inclination [rad] = ", inc)
-print("chief Ascending Node [rad] = ", AN)
-print("chief Argument of Periapsis [rad] = ", AP)
-print("chief initial true anomaly f [rad] = ", f_initial)
-print("chief orbital period: {} hours".format(2*pi/n/3600))
-M_initial = trueanomaly_2_meananomaly(f_initial, ecc)
-M_final = M_initial + sqrt(mu/sma**3)*time_lapse
-f_final = meananomaly_2_trueanomaly(M_final,ecc)
-# if f_final < 0:
-    # f_final += 2*pi
-print("chief final true anomaly f [rad] = ", f_final)
-print("\b")
-rc_N_f, vc_N_f = orbitelement_2_cartesian(mu,sma,ecc,inc,AN,AP,f_final)
-
-# Deputy satellite time of flight:
-print("Deputy satellite time of flight:")
-print("\b")
-sma, ecc, inc, AN, AP, f_initial = cartesian_2_orbitelement(mu, rd_N_0, vd_N_0)
-n = sqrt(mu/sma**3)
-print("deputy semi-major axis [km] = ", sma/1000)
-print("deputy eccentricity = ", ecc)
-print("deputy inclination [rad] = ", inc)
-print("deputy Ascending Node [rad] = ", AN)
-print("deputy Argument of Periapsis [rad] = ", AP)
-print("deputy initial true anomaly f [rad] = ", f_initial)
-print("deputy orbital period: {} hours".format(2*pi/n/3600))
-M_initial = trueanomaly_2_meananomaly(f_initial, ecc)
-M_final = M_initial + sqrt(mu/sma**3)*time_lapse
-f_final = meananomaly_2_trueanomaly(M_final,ecc)
-# if f_final < 0:
-    # f_final += 2*pi
-print("deputy final true anomaly f [rad] = ", f_final)
-print("\b")
-rd_N_f, vd_N_f = orbitelement_2_cartesian(mu,sma,ecc,inc,AN,AP,f_final)
-
-print("chief position [in km] at {0} seconds: rc_N = {1}".format(time_lapse,rc_N_f/1000))
-print("chief velocity [in km/s] at {0} seconds: vc_N = {1}".format(time_lapse,vc_N_f/1000))
-print("deputy position [in km] at {0} seconds: rd_N = {1}".format(time_lapse,rd_N_f/1000))
-print("deputy velocity [in km/s] at {0} seconds: vd_N = {1}".format(time_lapse,vd_N_f/1000))
-print("\b")
-
-#Mapping back deputy position and velocity from inertial to Hill frame
-rho_H_final, rhoP_H_final = Inertial_2_Hill_mapping(rc_N_f,vc_N_f,rd_N_f,vd_N_f)
-print("Final position of deputy in Hill frame (Kepler)")
-print("final_rho_H (Kepler) = ", rho_H_final/1000," km" )
-print("final_rhoP_H (Kepler) = ", rhoP_H_final/1000, " km/s")
-print("\b") 
-
-
-#METHOD 2 --> Using Hill frame differential equations and a [first order] ODE integrator
-print("---------------------------------------------------------------------------------------")
-print("**** METHOD 2: Integrating the general relative equations of motion in the Hill Frame ****")
-print("\b")
-
-#Initial conditions (H-frame relative position & velocity)
-rc = rc_N_0.copy()
-vc = vc_N_0.copy()
-rho = rho_H_0.copy()
-rhoP = rhoP_H_0.copy()
-
-h = np.cross(rc,vc)
-o_hat_r = rc/np.linalg.norm(rc)   #radial direction (unit vector)
-x = rho[0]
-y = rho[1]
-z = rho[2]
-x_dot = rhoP[0]
-y_dot = rhoP[1]
-z_dot = rhoP[2]
-
-#history list creation
-x_history = np.zeros([len(t)+1,3])
-y_history = np.zeros([len(t)+1,3])
-z_history = np.zeros([len(t)+1,3])
+#history arrays creation
+rc_history = np.zeros([len(t)+1,3])  #chief satellite position history (trajectory) in inertial frame
+vc_history = np.zeros([len(t)+1,3])  #chief satellite velocity history in inertial frame
+rd_history = np.zeros([len(t)+1,3])  #deputy satellite position history (trajectory) in inertial frame
+vd_history = np.zeros([len(t)+1,3])  #deputy satellite velocity history in inertial frame
 
 #Main loop
-x_history[0,:] = x
-y_history[0,:] = y
-z_history[0,:] = z 
+rc = rc_N_0.copy()
+vc = vc_N_0.copy()
+rd = rd_N_0.copy()
+vd = vd_N_0.copy()
+rc_history[0,:] = rc/1000.   #km
+vc_history[0,:] = vc/1000.   #km/s
+rd_history[0,:] = rd/1000.   #km
+vd_history[0,:] = vd/1000.   #km/s
 
-for i, ti in enumerate(t):
+for i,ti in enumerate(t):
+    #chief integration of inertial equations of motion
     rc_norm = np.linalg.norm(rc)
-    rc_dot_norm = np.dot(vc,o_hat_r)
-    rd_norm = sqrt((rc_norm + x)**2 + y**2 + z**2)
-    fdot = np.linalg.norm(h)/rc_norm**2
-    #relative position propagation
-    x_dot_dot = (-mu/rd_norm**3)*(rc_norm + x) + 2*fdot*(y_dot - y*rc_dot_norm/rc_norm) + x*fdot**2 + mu/rc_norm**2
-    y_dot_dot = (-mu/rd_norm**3)*y - 2*fdot*(x_dot - x*rc_dot_norm/rc_norm) + y*fdot**2
-    z_dot_dot = (-mu/rd_norm**3)*z
-    x_dot += x_dot_dot*dt
-    x += x_dot*dt
-    y_dot += y_dot_dot*dt
-    y += y_dot*dt
-    z_dot += z_dot_dot*dt
-    z += z_dot*dt
-    #chief satellite orbit propagation
     rc_dot_dot = -(mu/rc_norm**3)*rc
     vc += rc_dot_dot*dt
     rc += vc*dt
-    h = np.cross(rc,vc)
-    o_hat_r = rc/np.linalg.norm(rc)
-    #history update
-    x_history[i+1,:] = x/1000
-    y_history[i+1,:] = y/1000
-    z_history[i+1,:] = z/1000
+    rc_history[i+1,:]=rc/1000.
+    vc_history[i+1,:]=vc/1000.
+    
+    #deputy satellite integration of inertial equations of motion
+    rd_norm = np.linalg.norm(rd)
+    rd_dot_dot = -(mu/rd_norm**3)*rd
+    vd += rd_dot_dot*dt
+    rd += vd*dt
+    rd_history[i+1,:]=rd/1000.
+    vd_history[i+1,:]=vd/1000.
+    
+print("chief position [in km] at {} seconds: rc_N = ".format(t[-1]),rc_history[-1])
+print("chief velocity [in km/s] at {} seconds: vc_N = ".format(t[-1]),vc_history[-1])
+print("deputy position [in km] at {} seconds: rd_N = ".format(t[-1]),rd_history[-1])
+print("deputy velocity [in km/s] at {} seconds: vd_N = ".format(t[-1]),vd_history[-1])
+print("\b")
 
-rho_H_final = np.array([x,y,z])
-rhoP_H_final = np.array([x_dot,y_dot,z_dot])
-
-print("Final position of deputy in Hill frame (Relative ODE)")
-print("final_rho_H (relative ODE) = ", rho_H_final/1000," km" )
-print("final_rhoP_H (relative ODE) = ", rhoP_H_final/1000, " km/s")
+#Mapping back deputy position and velocity from inertial to Hill frame
+rho_H, rhoP_H = Inertial_2_Hill_mapping(rc,vc,rd,vd)
+print("Final position of deputy in Hill frame")
+print("final_rho_H = ", rho_H/1000.," km" )
+print("final_rhoP_H = ", rhoP_H/1000., " km/s")
 print("\b") 

@@ -55,7 +55,7 @@ def meananomaly_2_trueanomaly(M,e):
       f [float]: true anomaly in radians
     """
     #**********Newton-Raphson method
-    eps = 1e-7    #residual tolerance
+    eps = 1e-9    #residual tolerance
     E = M         #seed value (recommended)
     Residual = M - E +e*sin(E)  #residual to be minimized
 
@@ -147,11 +147,10 @@ def orbitelement_2_cartesian(mu,a,e,i,ohm,w,f):
     
     n = sqrt(mu/a**3)
     theta = w + f
-    p = a*(1-e)*(1+e)
+    p = a*(1-e**2)
     r_norm = p/(1 + e*cos(f))
-    fdot = compute_f_dot(f,n,e,t_step=0.001)
-    h = fdot*r_norm**2
-    
+    h = sqrt(mu*p)
+        
     r_ix = cos(ohm)*cos(theta) - sin(ohm)*sin(theta)*cos(i)
     r_iy = sin(ohm)*cos(theta) + cos(ohm)*sin(theta)*cos(i)
     r_iz = sin(theta)*sin(i)
@@ -194,13 +193,14 @@ def cartesian_2_orbitelement(mu, rVEC, vVEC):
     PN = np.array([i_e,i_p,i_h])
     AN, inc, AP = inverse_Euler_313(PN)
     f = atan2(np.dot(np.cross(i_e,i_r),i_h),np.dot(i_e,i_r))
+    # f = atan(np.dot(np.cross(i_e,i_r),i_h)/np.dot(i_e,i_r))
     
     return sma, ecc, inc*pi/180, AN*pi/180, AP*pi/180, f
 
 
 def Inertial_2_Hill_mapping(rc_N,vc_N,rd_N,vd_N):
-    """This function maps the inertial (ECI) position and velocity of the chief and deputy
-    satellites, to the orbital or LVLH or Hills frame (centred in the chief)
+    """This function maps the inertial (ECI) position and velocity of the chief and deputy satellites, 
+    to the Orbital (LVLH) or relative Hills frame (centred in the chief).
     Inputs:
       rc_N [ndarray]: position vector of the chief satellite expressed in ECI cartesian coordinates, in [m];
       vc_N [ndarray]: velocity vector of the chief satellite expressed in ECI cartesian coordinates, [m/s];
@@ -227,8 +227,8 @@ def Inertial_2_Hill_mapping(rc_N,vc_N,rd_N,vd_N):
 
 
 def Hill_2_Inertial_mapping(rc_N,vc_N,rho_H,rhoP_H):
-    """This function maps the inertial (ECI) position and velocity of the chief and deputy
-    satellites, to the orbital or LVLH or Hills frame (centred in the chief)
+    """This function maps the Orbital (LVLH) or relative Hills frame position and relative velocity of the deputy satellite
+    with respect to chief, to the inertial (ECI) cartesian position and velocity vectors of the deputy.
     Inputs:
       rc_N [ndarray]: position vector of the chief satellite expressed in ECI cartesian coordinates, in [m];
       vc_N [ndarray]: velocity vector of the chief satellite expressed in ECI cartesian coordinates, [m/s];
@@ -253,6 +253,32 @@ def Hill_2_Inertial_mapping(rc_N,vc_N,rho_H,rhoP_H):
     return rd_N, vd_N 
 
 
+def Rectilinear_2_Curvilinear_mapping(x,y,r,x_dot,y_dot, r_dot):
+    """This function converts Hill-frame rectilinear coordinates into Hill-frame cylindrical coordinates
+    for the linearized relative equations of motion (CWH equations)"""
+    rd = sqrt((r + x)**2 + y**2)
+    delta_r = rd - r
+    s = r*atan(y/(r+x))
+    rd_dot = 1/(sqrt((x + r)**2 + y**2))*((x + r)*(x_dot + r_dot) + y*y_dot )
+    delta_r_dot = rd_dot - r_dot
+    aux = y/(r+x)
+    s_dot = r_dot*atan(aux) + ( r/(1 + (aux)**2) )*( y_dot/(r+x) - y*(r_dot + x_dot)/(r+x)**2 )
+    
+    return delta_r, delta_r_dot, s, s_dot
 
 
+def Curvilinear_2_Rectilinear_mapping(delta_r, s, r, delta_r_dot, s_dot, r_dot):
+    """This function converts Hill-frame curvilinear coordinates into Hill-frame rectilinear coordinates
+    for the linearized relative equations of motion (CWH equations)"""
+    
+    delta_theta = s/r
+    delta_theta_dot = s_dot/r - s*r_dot/r**2
+    rd = r + delta_r
+    rd_dot = r_dot + delta_r_dot
+    x = rd*cos(delta_theta) - r
+    y = rd*sin(delta_theta)
+    x_dot = rd_dot*cos(delta_theta) - rd*sin(delta_theta)*delta_theta_dot - r_dot
+    y_dot = rd_dot*sin(delta_theta) + rd*cos(delta_theta)*delta_theta_dot
+
+    return x, x_dot, y, y_dot
 
