@@ -67,24 +67,24 @@ def meananomaly_2_trueanomaly(M,e):
         
     return 2*atan(sqrt((1+e)/(1-e))*tan(E/2))
 
-def compute_f_dot(f,n,e,t_step):
-    """Given the true anomaly f and the orbital parameters, this function calculates the rate f_dot
-    numerically using a time step defined by t_step.
-    Inputs:
-      f [float]: the true anomaly at time t, in radians
-      n [float]: the mean orbit rate n = sqrt(mu/a^3), in rad/s
-      e [float]: eccentricity
-      t_step [float]: time step for numerical derivative, in seconds
-    Output:
-      f_dot [float]: the true anomaly rate in rad/s
-      """
+# def compute_f_dot(f,n,e,t_step):
+#     """Given the true anomaly f and the orbital parameters, this function calculates the rate f_dot
+#     numerically using a time step defined by t_step.
+#     Inputs:
+#       f [float]: the true anomaly at time t, in radians
+#       n [float]: the mean orbit rate n = sqrt(mu/a^3), in rad/s
+#       e [float]: eccentricity
+#       t_step [float]: time step for numerical derivative, in seconds
+#     Output:
+#       f_dot [float]: the true anomaly rate in rad/s
+#       """
     
-    M_0 = trueanomaly_2_meananomaly(f,e)
-    M_1 = M_0 + n*t_step
-    f_1 = meananomaly_2_trueanomaly(M_1,e)
-    f_dot = (f_1 - f)/t_step
+#     M_0 = trueanomaly_2_meananomaly(f,e)
+#     M_1 = M_0 + n*t_step
+#     f_1 = meananomaly_2_trueanomaly(M_1,e)
+#     f_dot = (f_1 - f)/t_step
 
-    return f_dot
+#     return f_dot
 
 
 def Euler_313(angle1,angle2,angle3):
@@ -197,6 +197,40 @@ def cartesian_2_orbitelement(mu, rVEC, vVEC):
     
     return sma, ecc, inc*pi/180, AN*pi/180, AP*pi/180, f
 
+
+def Kepler_solver(mu, r_N_0, v_N_0, time_lapse, report = True):
+    """ This function propagates the Keplerian orbit of a satellite during a time_lapse, from its initial position
+    and velocity, to its final position and velocity, all in ECI cartesian coordinates.
+    Inputs:
+      mu [float]: is the gravitational constant expressed in SI units
+      r_N_0 [ndarray]: is the initial position vector in inertial ECI frame coordinates, in [m]
+      v_N_0 [ndarray]: is the initial velocity vector in inertial ECI frame coordinates, in [m]
+      time_lapse [float]: is the elapsed time for the propagation, in seconds
+      orbit_report (optional): if set to "true" it prints the values of the orbit elements
+    Outputs:
+      r_N_final [ndarray]: is the position vector in inertial ECI frame coordinates, in [m]
+      v_N_final [ndarray]: is the velocity vector in inertial ECI frame coordinates, in [m]
+    """
+    sma, ecc, inc, AN, AP, f_initial = cartesian_2_orbitelement(mu, r_N_0, v_N_0)
+    n = sqrt(mu/sma**3)
+    M_initial = trueanomaly_2_meananomaly(f_initial, ecc)
+    M_final = M_initial + sqrt(mu/sma**3)*time_lapse
+    f_final = meananomaly_2_trueanomaly(M_final,ecc)
+    r_N_final, v_N_final = orbitelement_2_cartesian(mu,sma,ecc,inc,AN,AP,f_final)
+
+    if (report == True):
+        print("Semi-major axis [km] = ", sma/1000)
+        print("Eccentricity = ", ecc)
+        print("Inclination [rad] = ", inc)
+        print("Ascending Node [rad] = ", AN)
+        print("Argument of Periapsis [rad] = ", AP)
+        print("Initial true anomaly f [rad] = ", f_initial)
+        print("chief orbital period: {} hours".format(2*pi/n/3600))
+        print("chief final true anomaly f [rad] = ", f_final)
+        print("\b")
+    
+    return r_N_final, v_N_final
+    
 
 def Inertial_2_Hill_mapping(rc_N,vc_N,rd_N,vd_N):
     """This function maps the inertial (ECI) position and velocity of the chief and deputy satellites, 
