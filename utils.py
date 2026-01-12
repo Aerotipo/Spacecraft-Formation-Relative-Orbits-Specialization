@@ -13,6 +13,7 @@ Created on December 2025
 import numpy as np
 from math import sin, cos, tan, asin, acos, atan, atan2, sqrt, pi
 
+
 def a_J2(r, mu, J2, r_eq):
     """This function generates the disturbance acceleration a_J2 produced by J2
     as a function of the position r in cartesian coordinates.
@@ -259,7 +260,6 @@ def Inertial_2_Hill_mapping(rc_N,vc_N,rd_N,vd_N):
     return rho_H, rhoP_H
 
 
-
 def Hill_2_Inertial_mapping(rc_N,vc_N,rho_H,rhoP_H):
     """This function maps the Orbital (LVLH) or relative Hills frame position and relative velocity of the deputy satellite
     with respect to chief, to the inertial (ECI) cartesian position and velocity vectors of the deputy.
@@ -304,7 +304,6 @@ def Rectilinear_2_Curvilinear_mapping(x,y,r,x_dot,y_dot, r_dot):
 def Curvilinear_2_Rectilinear_mapping(delta_r, s, r, delta_r_dot, s_dot, r_dot):
     """This function converts Hill-frame curvilinear coordinates into Hill-frame rectilinear coordinates
     for the linearized relative equations of motion (CWH equations)"""
-    
     delta_theta = s/r
     delta_theta_dot = s_dot/r - s*r_dot/r**2
     rd = r + delta_r
@@ -315,4 +314,125 @@ def Curvilinear_2_Rectilinear_mapping(delta_r, s, r, delta_r_dot, s_dot, r_dot):
     y_dot = rd_dot*sin(delta_theta) + rd*cos(delta_theta)*delta_theta_dot
 
     return x, x_dot, y, y_dot
+
+
+def OE_2_LVLH_linear_mapping_matrix_A(mu, sma, theta, inc, q1, q2, AN):
+    """ This function computes the [A_oe] matrix with the linear mapping from OE Relative Orbit Coordinates to
+    Cartesian LVLH, that describe the deputy orbital elements relative to the chief orbital elements.
+    Inputs:
+      mu [float]: is the gravitational constant expressed in SI units
+      sma [float]: the chief semi-major axis, in m;
+      theta [float]: the chief total anomaly (theta = Argument of periapsis (AP) + true anomaly (f)) in rad;
+      inc [float]: the chief orbit inclination, in rad;
+      q1 [float]: q1 = ecc*cos(AP), where ecc is the eccentricity of the chief orbit, non-dimensional;
+      q2 [float]: q2 = ecc*sin(AP), where ecc is the eccentricity of the chief orbit, non-dimensional;
+      AN [float]: the chief Ascending Node (Ohmega)
+    Outputs:
+      A_oe [ndarray]: a 6x6 matrix mapping the two spaces as per the vectorial relation delta_X = [A_oe]*delta_oe
+    """
+    # Simplify parameters notation
+    a = sma
+    i = inc
+    Ohmega = AN
+    
+    # Compute orbital parameters
+    ecc = sqrt(q1**2 + q2**2)   #eccentricity
+    if ecc == 0:
+        print("Warning! Chief circular orbit can create singularities in w")
+    AP = acos(q1/ecc)   # argument of periapsis (w)
+    f = theta - AP    # true anomaly
+    r = a*(1 - q1**2 - q2**2)/(1 + ecc*cos(f))
+    p = a*(1 - q1**2 - q2**2)
+    h = sqrt(mu*p)
+    Vr = h/p*(q1*sin(theta) - q2*cos(theta))
+    Vt = h/p*(1 + q1*cos(theta) + q2*sin(theta))
+
+    # Compute Matrix elements
+    A_oe = np.zeros([6,6])
+    A_oe[0,0] = r/a
+    A_oe[0,1] = Vr/Vt*r
+    A_oe[0,3] = -r/p*(2*a*q1 + r*cos(theta))
+    A_oe[0,4] = -r/p*(2*a*q2 + r*sin(theta))
+    A_oe[1,1] = r
+    A_oe[1,5] = r*cos(i)
+    A_oe[2,2] = r*sin(theta)
+    A_oe[2,5] = -r*cos(theta)*sin(i)
+    A_oe[3,0] = -Vr/(2*a)
+    A_oe[3,1] = (1/r - 1/p)*h
+    A_oe[3,3] = (Vr*a*q1 + h*sin(theta))/p
+    A_oe[3,4] = (Vr*a*q2 - h*cos(theta))/p
+    A_oe[4,0] = -3*Vt/(2*a)
+    A_oe[4,1] = -Vr
+    A_oe[4,3] = (3*Vt*a*q1 + 2*h*cos(theta))/p
+    A_oe[4,4] = (3*Vt*a*q2 + 2*h*sin(theta))/p
+    A_oe[4,5] = Vr*cos(i)
+    A_oe[5,2] = (Vt*cos(theta) + Vr*sin(theta))
+    A_oe[5,5] = (Vt*sin(theta) - Vr*cos(theta))*sin(i)
+
+    return A_oe
+
+
+def LVLH_2_OE_linear_mapping_inversematrix_A(mu, sma, theta, inc, q1, q2, AN):
+    """ This function computes the inverse inv[A_oe] matrix with the linear mapping from Cartesian LVLH to OE Relative 
+    Orbit Coordinates, that describe the relative deputy orbital elements wrt to the chief orbital elements.
+    Inputs:
+      mu [float]: is the gravitational constant expressed in SI units
+      sma [float]: the chief semi-major axis, in m;
+      theta [float]: the chief total anomaly (theta = Argument of periapsis (AP) + true anomaly (f)) in rad;
+      inc [float]: the chief orbit inclination, in rad;
+      q1 [float]: q1 = ecc*cos(AP), where ecc is the eccentricity of the chief orbit, non-dimensional;
+      q2 [float]: q2 = ecc*sin(AP), where ecc is the eccentricity of the chief orbit, non-dimensional;
+      AN [float]: the chief Ascending Node (Ohmega)
+    Outputs:
+      inverse_A_oe [ndarray]: a 6x6 matrix mapping the two spaces as per the vectorial relation delta_oe = inv([A_oe])*delta_X
+    """
+    # Simplify parameters notation:
+    a = sma
+    i = inc
+    Ohmega = AN
+    
+    # Compute orbital parameters:
+    ecc = sqrt(q1**2 + q2**2)   #eccentricity
+    AP = acos(q1/ecc)           # argument of periapsis (w)
+    f = theta - AP              # true anomaly
+    R = a*(1 - q1**2 - q2**2)/(1 + ecc*cos(f))
+    p = a*(1 - q1**2 - q2**2)
+    h = sqrt(mu*p)
+    Vr = h/p*(q1*sin(theta) - q2*cos(theta))
+    Vt = h/p*(1 + q1*cos(theta) + q2*sin(theta))
+
+    # Compute non-dimensional matrix components:
+    alpha = a/R
+    vu = Vr/Vt
+    rho = R/p
+    k1 = alpha*(1/rho - 1)
+    k2 = alpha*(1/rho)*vu**2
+
+    # Compute Matrix elements:
+    A_oe_inverse = np.zeros([6,6])
+    A_oe_inverse[0,0] = 2*alpha*(2 + 3*k1 + 2*k2)
+    A_oe_inverse[0,1] = -2*alpha*vu*(1 + 2*k1 + k2)
+    A_oe_inverse[0,3] = 2*alpha**2*vu*p/Vt
+    A_oe_inverse[0,4] = 2*a/Vt*(1 + 2*k1 + k2)
+    A_oe_inverse[1,1] = 1/R
+    A_oe_inverse[1,2] = 1/(tan(i)*R)*(cos(theta) + vu*sin(theta))
+    A_oe_inverse[1,5] = -sin(theta)/(tan(i)*Vt)
+    A_oe_inverse[2,2] = (sin(theta) - vu*cos(theta))/R
+    A_oe_inverse[2,5] = cos(theta)/Vt
+    A_oe_inverse[3,0] = 1/(rho*R)*(3*cos(theta) + 2*vu*sin(theta))
+    A_oe_inverse[3,1] = -(1/R)*(vu**2/rho*sin(theta) + q1*sin(2*theta) - q2*cos(2*theta))
+    A_oe_inverse[3,2] = -q2/(tan(i)*R)*(cos(theta) + vu*sin(theta))
+    A_oe_inverse[3,3] = sin(theta)/(rho*Vt)
+    A_oe_inverse[3,4] = (1/(rho*Vt))*(2*cos(theta) + vu*sin(theta))
+    A_oe_inverse[3,5] = (q2*sin(theta))/(tan(i)*Vt)
+    A_oe_inverse[4,0] = (1/(rho*R))*(3*sin(theta) - 2*vu*cos(theta))
+    A_oe_inverse[4,1] = 1/R*(vu**2/rho*cos(theta) + q2*sin(2*theta) + q1*cos(2*theta))
+    A_oe_inverse[4,2] = q1/(tan(i)*R)*(cos(theta) + vu*sin(theta))
+    A_oe_inverse[4,3] = -cos(theta)/(rho*Vt)
+    A_oe_inverse[4,4] = 1/(rho*Vt)*(2*sin(theta) - vu*cos(theta))
+    A_oe_inverse[4,5] = -q1*sin(theta)/(tan(i)*Vt)
+    A_oe_inverse[5,2] = -(cos(theta) + vu*sin(theta))/(R*sin(i))
+    A_oe_inverse[5,5] = sin(theta)/(Vt*sin(i))
+
+    return A_oe_inverse
 
