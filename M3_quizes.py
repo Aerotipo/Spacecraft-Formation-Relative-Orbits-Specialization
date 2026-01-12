@@ -525,8 +525,9 @@ from utils import *
 #=====================================================================
 # exercise 3
 #=============
-mu = 398600000.0e6  # Earth geocentric gravitational constant
-sma = 7500       # [m] semi-major axis
+mu = 398600000.0e6  # Earth geocentric gravitational constant in SI units
+mu = 398600         # [km^3/s^2] Earth geocentric gravitational constant
+sma = 7500          # [m] semi-major axis
 theta = 13*pi/180   # [rad] full anomaly
 inc = 22*pi/180     # [rad] inclination
 q1 = 0.00707107
@@ -535,7 +536,6 @@ AN = 70*pi/180      # [rad] ascending node
 
 A_matrix = OE_2_LVLH_linear_mapping_matrix_A(mu, sma, theta, inc, q1, q2, AN)
 
-# np.set_printoptions(precision=4)
 print("[A_eo] = ", A_matrix)
 
 #=============
@@ -543,7 +543,8 @@ print("[A_eo] = ", A_matrix)
 #=============
 
 A_inverse = LVLH_2_OE_linear_mapping_inversematrix_A(mu, sma, theta, inc, q1, q2, AN)
-# np.set_printoptions(precision=4)
+
 # print("inverse([A_eo]) = ", A_inverse)
 
+# Health check:
 # print("health check: [A]*inv([A]) = ", np.dot(A_matrix, A_inverse))
