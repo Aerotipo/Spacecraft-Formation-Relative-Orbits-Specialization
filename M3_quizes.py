@@ -520,31 +520,78 @@ from utils import *
 # print("\b") 
 
 
-#=====================================================================
-#quiz 12 - Linear Mapping between OE Differences and LVLH Coordinates
-#=====================================================================
-# exercise 3
-#=============
-mu = 398600000.0e6  # Earth geocentric gravitational constant in SI units
-mu = 398600         # [km^3/s^2] Earth geocentric gravitational constant
-sma = 7500          # [m] semi-major axis
-theta = 13*pi/180   # [rad] full anomaly
-inc = 22*pi/180     # [rad] inclination
-q1 = 0.00707107
-q2 = 0.00707107
-AN = 70*pi/180      # [rad] ascending node
+# #=====================================================================
+# #quiz 12 - Linear Mapping between OE Differences and LVLH Coordinates
+# #=====================================================================
+# # exercise 3
+# #=============
+# # mu = 398600000.0e6  # Earth geocentric gravitational constant in SI units
+# mu = 398600         # [km^3/s^2] Earth geocentric gravitational constant
+# sma = 7500          # [m] semi-major axis
+# theta = 13*pi/180   # [rad] full anomaly
+# inc = 22*pi/180     # [rad] inclination
+# q1 = 0.00707107
+# q2 = 0.00707107
+# AN = 70*pi/180      # [rad] ascending node
 
-A_matrix = OE_2_LVLH_linear_mapping_matrix_A(mu, sma, theta, inc, q1, q2, AN)
+# A_matrix = OE_2_LVLH_linear_mapping_matrix_A(mu, sma, theta, inc, q1, q2, AN)
 
-print("[A_eo] = ", A_matrix)
+# print("[A_eo] = ", A_matrix)
 
-#=============
-# exercise 4
-#=============
+# #=============
+# # exercise 4
+# #=============
 
-A_inverse = LVLH_2_OE_linear_mapping_inversematrix_A(mu, sma, theta, inc, q1, q2, AN)
+# A_inverse = LVLH_2_OE_linear_mapping_inversematrix_A(mu, sma, theta, inc, q1, q2, AN)
 
 # print("inverse([A_eo]) = ", A_inverse)
 
-# Health check:
+# # Health check:
 # print("health check: [A]*inv([A]) = ", np.dot(A_matrix, A_inverse))
+
+#=====================================================================
+#quiz 14 - Formation Barycenter
+#=====================================================================
+# exercise 1
+#=============
+mu = 398600000.0e6  # Earth geocentric gravitational constant in SI units
+a = 7000*1000       # [m] semi-major axis
+e = 0.01            # eccentricity
+i = 78*pi/180       # [rad] inclination
+ohm = 120*pi/180    # [rad] Ascending Node
+w = 33*pi/180       # [rad] Argument of Periapsis
+f = 45*pi/180       # [rad] True Anomaly
+df = 1*pi/180       # [rad] deputy phase difference
+
+r1_N, v1_N = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f)
+r2_N, v2_N = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f+df)
+rCCM_N = (r1_N + r2_N)/2
+
+print("rCCM_N = ", rCCM_N/1000, "[km]")
+
+#=============
+# exercise 2
+#=============
+rOECM_N, _ = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f+df/2)
+
+print("rEOCM_N = ", rOECM_N/1000, "[km]")
+
+#=============
+# exercise 3
+#=============
+# Step 1: inertial position and velocity vectors of the Cartesian center of mass location
+rCCM_N = (r1_N + r2_N)/2
+vCCM_N = (v1_N + v2_N)/2
+
+# Step 2: map these into equivalent classical orbit elements to determine the semi-major axis.
+sma, _, _, _, _, _ = cartesian_2_orbitelement(mu, rCCM_N, vCCM_N)    #sma, ecc, inc, AN, AP, f
+
+# Step 3: Compute the corresponding orbit period
+n = sqrt(mu/sma**3)
+period = 2*pi/n     # in seconds
+
+# Step 4: Compare this period to the true period of this formation Cartesian barycenter location.
+n_true = sqrt(mu/a**3)
+period_true = 2*pi/n_true  #in seconds
+
+print("absolute difference in periods in seconds: ", abs(period - period_true))
