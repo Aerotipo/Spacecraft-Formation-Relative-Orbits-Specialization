@@ -549,49 +549,169 @@ from utils import *
 # # Health check:
 # print("health check: [A]*inv([A]) = ", np.dot(A_matrix, A_inverse))
 
+# #=====================================================================
+# #quiz 14 - Formation Barycenter
+# #=====================================================================
+# # exercise 1
+# #=============
+# mu = 398600000.0e6  # Earth geocentric gravitational constant in SI units
+# a = 7000*1000       # [m] semi-major axis
+# e = 0.01            # eccentricity
+# i = 78*pi/180       # [rad] inclination
+# ohm = 120*pi/180    # [rad] Ascending Node
+# w = 33*pi/180       # [rad] Argument of Periapsis
+# f = 45*pi/180       # [rad] True Anomaly
+# df = 1*pi/180       # [rad] deputy phase difference
+
+# r1_N, v1_N = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f)
+# r2_N, v2_N = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f+df)
+# rCCM_N = (r1_N + r2_N)/2
+
+# print("rCCM_N = ", rCCM_N/1000, "[km]")
+
+# #=============
+# # exercise 2
+# #=============
+# rOECM_N, _ = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f+df/2)
+
+# print("rEOCM_N = ", rOECM_N/1000, "[km]")
+
+# #=============
+# # exercise 3
+# #=============
+# # Step 1: inertial position and velocity vectors of the Cartesian center of mass location
+# rCCM_N = (r1_N + r2_N)/2
+# vCCM_N = (v1_N + v2_N)/2
+
+# # Step 2: map these into equivalent classical orbit elements to determine the semi-major axis.
+# sma, _, _, _, _, _ = cartesian_2_orbitelement(mu, rCCM_N, vCCM_N)    #sma, ecc, inc, AN, AP, f
+
+# # Step 3: Compute the corresponding orbit period
+# n = sqrt(mu/sma**3)
+# period = 2*pi/n     # in seconds
+
+# # Step 4: Compare this period to the true period of this formation Cartesian barycenter location.
+# n_true = sqrt(mu/a**3)
+# period_true = 2*pi/n_true  #in seconds
+
+# print("absolute difference in periods in seconds: ", abs(period - period_true))
+
+
+# #=====================================================================
+# #quiz 15 - Linearized Differential Mean Anomaly
+# #=====================================================================
+# # exercise 1
+# #=============
+# mu = 398600         # [km^3/s^2] Earth geocentric gravitational constant
+# e = 0.01
+# a = 7500            # [km]
+# da = 50             # [km]
+# dM_0 = 15*pi/180    # [radians]
+# delta_t = 14400     # [seconds]
+
+
+# dM_t_exact = dM_0 + (sqrt(mu/(a + da)**3) - sqrt(mu/a**3))*delta_t
+
+# print("Exact Solution:")
+# print("d_M(t)_exact = ", dM_t_exact*180/pi, "degrees")
+
+# dM_t_linear = dM_0 - 3/2*( sqrt(mu/a**3)*delta_t )*da/a
+
+# print("Linearized Solution:")
+# print("d_M(t)_linearized = ", dM_t_linear*180/pi, "degrees")
+
+
 #=====================================================================
-#quiz 14 - Formation Barycenter
+#quiz 16 - OE Differential Solutions
 #=====================================================================
 # exercise 1
-#=============
-mu = 398600000.0e6  # Earth geocentric gravitational constant in SI units
-a = 7000*1000       # [m] semi-major axis
-e = 0.01            # eccentricity
-i = 78*pi/180       # [rad] inclination
-ohm = 120*pi/180    # [rad] Ascending Node
-w = 33*pi/180       # [rad] Argument of Periapsis
-f = 45*pi/180       # [rad] True Anomaly
-df = 1*pi/180       # [rad] deputy phase difference
+# #=============
+# mu = 398600000.0e6      # Earth geocentric gravitational constant in SI units
+# # Chief orbit
+# a = 10000*1000          # [m] chief semi-major axis
+# e = 0.2                 # chief eccentricity
+# i = 37*pi/180           # [rad] chief inclination
+# ohm = 40*pi/180         # [rad] chief ascending node
+# w = 65*pi/180           # [rad] chief argument of periapsis
+# f_0 = 10*pi/180         # [rad] chief true anomaly
 
-r1_N, v1_N = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f)
-r2_N, v2_N = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f+df)
-rCCM_N = (r1_N + r2_N)/2
+# # Deputy relative motion (orbital elements)
+# delta_a = 0              # [km]
+# delta_e = 0.0001
+# delta_i = 0.001
+# delta_ohm = 0.001
+# delta_w = 0.001
+# delta_M_0 = -0.001       # [rad]
 
-print("rCCM_N = ", rCCM_N/1000, "[km]")
+# print("----------- Solution using the general Elliptic Chief Orbits relative equations ----------- ")
+# print("\b")
+# # Case 1: f1 = f_0
+# f = f_0
+# theta = w + f
+# delta_M = delta_M_0
+# r, _ = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f)
+# r_norm = np.linalg.norm(r)
+# eta = sqrt(1 - e**2)
+# f_u = atan(e*delta_M/(-eta*delta_e))
+# f_v = atan(eta*delta_e/(e*delta_M))
+# theta_w = atan(delta_i/(-sin(i)*delta_ohm))
 
-#=============
-# exercise 2
-#=============
-rOECM_N, _ = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f+df/2)
+# delta_u = sqrt((e**2*delta_M**2)/eta**2 + delta_e**2)
+# delta_w = sqrt(delta_i**2 + (sin(i))**2*delta_ohm**2)
 
-print("rEOCM_N = ", rOECM_N/1000, "[km]")
+# u = delta_a/a - e*delta_e/(2*eta**2) + (delta_u/eta**2)*(cos(f - f_u) + e/2*cos(2*f - f_u))
+# v = ((1 + 0.5*e**2)*delta_M/eta**3 + delta_w + cos(i)*delta_ohm) - (delta_u/eta**2)*(2*sin(f - f_u) + e/2*sin(2*f - f_u))
+# w = delta_w*cos(theta - theta_w)
 
-#=============
-# exercise 3
-#=============
-# Step 1: inertial position and velocity vectors of the Cartesian center of mass location
-rCCM_N = (r1_N + r2_N)/2
-vCCM_N = (v1_N + v2_N)/2
+# rho_0_H = r_norm*np.array([u,v,w])
+# print("rho_0_H = [km] ", rho_0_H/1000)
 
-# Step 2: map these into equivalent classical orbit elements to determine the semi-major axis.
-sma, _, _, _, _, _ = cartesian_2_orbitelement(mu, rCCM_N, vCCM_N)    #sma, ecc, inc, AN, AP, f
+# # Case 2: f1 = f_0 + 60 degrees
+# f = f_0 + 60*pi/180
+# theta = w + f
+# delta_M = delta_M_0 - 3/2*( trueanomaly_2_meananomaly(f,e) - trueanomaly_2_meananomaly(f_0,e) )*delta_a/a
+# r, _ = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f)
+# r_norm = np.linalg.norm(r)
+# eta = sqrt(1 - e**2)
+# f_u = atan(e*delta_M/(-eta*delta_e))
+# f_v = atan(eta*delta_e/(e*delta_M))
+# theta_w = atan(delta_i/(-sin(i)*delta_ohm))
 
-# Step 3: Compute the corresponding orbit period
-n = sqrt(mu/sma**3)
-period = 2*pi/n     # in seconds
+# delta_u = sqrt(e**2*delta_M**2/eta**2 + delta_e**2)
+# delta_w = sqrt(delta_i**2 + (sin(i))**2*delta_ohm**2)
 
-# Step 4: Compare this period to the true period of this formation Cartesian barycenter location.
-n_true = sqrt(mu/a**3)
-period_true = 2*pi/n_true  #in seconds
+# u = delta_a/a - e*delta_e/(2*eta**2) + (delta_u/eta**2)*(cos(f - f_u) + e/2*cos(2*f - f_u))
+# v = ((1 + 0.5*e**2)*delta_M/eta**3 + delta_w + cos(i)*delta_ohm) - (delta_u/eta**2)*(2*sin(f - f_u) + e/2*sin(2*f - f_u))
+# w = delta_w*cos(theta - theta_w)
 
-print("absolute difference in periods in seconds: ", abs(period - period_true))
+# rho_1_H = r_norm*np.array([u,v,w])
+# print("rho_1_H = [km] ", rho_1_H/1000)
+
+
+# print("----------- Solution using the weakly ellipic Chief Orbits relative equations -----------")
+# print("\b")
+# # Case 1: f1 = f_0
+# f = f_0
+# theta = w + f
+# r = a*eta**2/(1 + e*cos(f))
+# delta_x = sqrt(e**2*delta_M**2/eta**2 + (delta_e + delta_a/a)**2)
+# delta_y = sqrt(3*delta_e**2 + e**2*(delta_M/eta - delta_w - cos(i))**2)
+# delta_z = sqrt(delta_i**2 + (sin(i)**2*delta_ohm**2))
+# fx = atan(e*delta_M/(-eta*(delta_e + delta_a/a)))
+# fy = atan(e*(delta_M/eta - delta_w - cos(i)*delta_ohm)/(-2*delta_e))
+# theta_z = atan(delta_i/(-sin(i)*delta_ohm))
+# fz = atan((cos(w)*delta_i + sin(w)*sin(i)*delta_ohm)/(sin(w)*delta_i - cos(w)*sin(i)*delta_ohm))
+
+# x = delta_a + a*delta_x*cos(f - fx)
+# y = a*(delta_M/eta + delta_w + cos(i)*delta_ohm) - a*delta_y*sin(f - fy) - a*e/2*sin(2*f)*delta_e
+# z = a*delta_z*cos(theta - theta_z) -a*e/2*delta_z*cos(2*f - fz) - a*e/2*(sin(w)*delta_i - cos(w)*sin(i)*delta_ohm)
+
+# rho_0_H_weak = np.array([x,y,z])
+# print("rho_0_H_weak = [km] ", rho_0_H_weak/1000)
+
+# # # Case 2: f1 = f_0 + 60 degrees
+# # f = f_0 + 60*pi/180
+# # print("rho_1_H_weak = [km] ", rho_1_H_weak/1000)
+
+
+
