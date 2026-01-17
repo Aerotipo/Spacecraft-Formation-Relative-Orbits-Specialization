@@ -626,92 +626,120 @@ from utils import *
 #=====================================================================
 # exercise 1
 # #=============
-# mu = 398600000.0e6      # Earth geocentric gravitational constant in SI units
-# # Chief orbit
-# a = 10000*1000          # [m] chief semi-major axis
-# e = 0.2                 # chief eccentricity
-# i = 37*pi/180           # [rad] chief inclination
-# ohm = 40*pi/180         # [rad] chief ascending node
-# w = 65*pi/180           # [rad] chief argument of periapsis
-# f_0 = 10*pi/180         # [rad] chief true anomaly
+mu = 398600000.0e6      # Earth geocentric gravitational constant in SI units
+# Chief orbit
+a = 10000*1000          # [m] chief semi-major axis
+e = 0.2                 # chief eccentricity
+i = 37*pi/180           # [rad] chief inclination
+ohm = 40*pi/180         # [rad] chief ascending node
+w = 65*pi/180           # [rad] chief argument of periapsis
+f_0 = 10*pi/180         # [rad] chief true anomaly
 
-# # Deputy relative motion (orbital elements)
-# delta_a = 0              # [km]
-# delta_e = 0.0001
-# delta_i = 0.001
-# delta_ohm = 0.001
-# delta_w = 0.001
-# delta_M_0 = -0.001       # [rad]
+# Deputy relative motion (orbital elements)
+delta_a = 0              # [km]
+delta_e = 0.0001
+delta_i = 0.001
+delta_ohm = 0.001
+delta_w = 0.001
+delta_M_0 = -0.001       # [rad]
 
-# print("----------- Solution using the general Elliptic Chief Orbits relative equations ----------- ")
-# print("\b")
-# # Case 1: f1 = f_0
-# f = f_0
-# theta = w + f
-# delta_M = delta_M_0
-# r, _ = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f)
-# r_norm = np.linalg.norm(r)
-# eta = sqrt(1 - e**2)
-# f_u = atan(e*delta_M/(-eta*delta_e))
-# f_v = atan(eta*delta_e/(e*delta_M))
-# theta_w = atan(delta_i/(-sin(i)*delta_ohm))
+# METHOD 1: Non-linear mapping between orbit elements and Hill state vector X
+print("\b")
+print("---------- METHOD 1: Non-linear mapping between orbit elements and Hill state vector X ----------")
+print("\b")
+# Chief initial conditions:
+rc_N_0, vc_N_0 = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f_0)
+Mc_0 = trueanomaly_2_meananomaly(f_0,e)
+# Deputy initial conditions
+Md_0 = Mc_0 + delta_M_0
+fd_0 = meananomaly_2_trueanomaly(Md_0,e+delta_e)
+rd_N_0, vd_N_0 = orbitelement_2_cartesian(mu,a+delta_a,e+delta_e,i+delta_i,ohm+delta_ohm,w+delta_w,fd_0)
+# Map to Hill Frame initial conditions
+rho_H_0, rhoP_H_0 = Inertial_2_Hill_mapping(rc_N_0, vc_N_0, rd_N_0, vd_N_0)
+print("Method 1:   rho_0_H = ", rho_H_0/1000, "km")
 
-# delta_u = sqrt((e**2*delta_M**2)/eta**2 + delta_e**2)
-# delta_w = sqrt(delta_i**2 + (sin(i))**2*delta_ohm**2)
+# Chief final conditions
+f_t = f_0 + 60*pi/180
+rc_N_t, vc_N_t = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f_t)
+Mc_t = trueanomaly_2_meananomaly(f_t,e)
+# Deputy final conditions
+delta_M = delta_M_0 - 3/2*( trueanomaly_2_meananomaly(f_t,e) - trueanomaly_2_meananomaly(f_0,e) )*delta_a/a
+Md_t = Mc_t + delta_M
+fd_t = meananomaly_2_trueanomaly(Md_t,e+delta_e)
+rd_N_t, vd_N_t = orbitelement_2_cartesian(mu,a+delta_a,e+delta_e,i+delta_i,ohm+delta_ohm,w+delta_w,fd_t)
+# Map to Hill Frame final conditions
+rho_H_t, rhoP_H_t = Inertial_2_Hill_mapping(rc_N_t, vc_N_t, rd_N_t, vd_N_t)
+print("Method 1:   rho_t_H = ", rho_H_t/1000, "km")
 
-# u = delta_a/a - e*delta_e/(2*eta**2) + (delta_u/eta**2)*(cos(f - f_u) + e/2*cos(2*f - f_u))
-# v = ((1 + 0.5*e**2)*delta_M/eta**3 + delta_w + cos(i)*delta_ohm) - (delta_u/eta**2)*(2*sin(f - f_u) + e/2*sin(2*f - f_u))
-# w = delta_w*cos(theta - theta_w)
+# METHOD 2: Using the EO difference solution for general elliptic chief orbits
+print("\b")
+print("---------- METHOD 2: Using the EO difference solution for general elliptic chief orbits ----------")
+print("\b")
+# Initial conditions
+f = f_0
+theta = w + f
+delta_M = delta_M_0
+r = a*(1 - e**2)/(1 + e*cos(f))
+eta = sqrt(1 - e**2)
+f_u = atan2(e*delta_M,(-eta*delta_e))
+# f_v = atan2(eta*delta_e,(e*delta_M))
+theta_w = atan2(delta_i,(-sin(i)*delta_ohm))
 
-# rho_0_H = r_norm*np.array([u,v,w])
-# print("rho_0_H = [km] ", rho_0_H/1000)
+delta_u = sqrt((e**2*delta_M**2)/eta**2 + delta_e**2)
+delta_w = sqrt(delta_i**2 + (sin(i))**2*delta_ohm**2)
 
-# # Case 2: f1 = f_0 + 60 degrees
-# f = f_0 + 60*pi/180
-# theta = w + f
-# delta_M = delta_M_0 - 3/2*( trueanomaly_2_meananomaly(f,e) - trueanomaly_2_meananomaly(f_0,e) )*delta_a/a
-# r, _ = orbitelement_2_cartesian(mu,a,e,i,ohm,w,f)
-# r_norm = np.linalg.norm(r)
-# eta = sqrt(1 - e**2)
-# f_u = atan(e*delta_M/(-eta*delta_e))
-# f_v = atan(eta*delta_e/(e*delta_M))
-# theta_w = atan(delta_i/(-sin(i)*delta_ohm))
+u = delta_a/a - e*delta_e/(2*eta**2) + (delta_u/eta**2)*(cos(f - f_u) + e/2*cos(2*f - f_u))
+v = ((1 + 0.5*e**2)*delta_M/eta**3 + delta_w + cos(i)*delta_ohm) - (delta_u/eta**2)*(2*sin(f - f_u) + e/2*sin(2*f - f_u))
+w = delta_w*cos(theta - theta_w)
 
-# delta_u = sqrt(e**2*delta_M**2/eta**2 + delta_e**2)
-# delta_w = sqrt(delta_i**2 + (sin(i))**2*delta_ohm**2)
+rho_0_H = r*np.array([u,v,w])
+print("Method 2:   rho_0_H = ", rho_0_H/1000, "[km]")
 
-# u = delta_a/a - e*delta_e/(2*eta**2) + (delta_u/eta**2)*(cos(f - f_u) + e/2*cos(2*f - f_u))
-# v = ((1 + 0.5*e**2)*delta_M/eta**3 + delta_w + cos(i)*delta_ohm) - (delta_u/eta**2)*(2*sin(f - f_u) + e/2*sin(2*f - f_u))
-# w = delta_w*cos(theta - theta_w)
+# Final conditions ( f2 = f_0 + 60 degrees)
+f = f_0 + 60*pi/180
+theta = w + f
+delta_M = delta_M_0 - 3/2*( trueanomaly_2_meananomaly(f,e) - trueanomaly_2_meananomaly(f_0,e) )*delta_a/a
+r = a*(1 - e**2)/(1 + e*cos(f))
+eta = sqrt(1 - e**2)
+f_u = atan2(e*delta_M,(-eta*delta_e))
+f_v = atan2(eta*delta_e,(e*delta_M))
+theta_w = atan2(delta_i,(-sin(i)*delta_ohm))
 
-# rho_1_H = r_norm*np.array([u,v,w])
-# print("rho_1_H = [km] ", rho_1_H/1000)
+delta_u = sqrt(e**2*delta_M**2/eta**2 + delta_e**2)
+delta_w = sqrt(delta_i**2 + (sin(i))**2*delta_ohm**2)
 
+u = delta_a/a - e*delta_e/(2*eta**2) + (delta_u/eta**2)*(cos(f - f_u) + e/2*cos(2*f - f_u))
+v = ((1 + 0.5*e**2)*delta_M/eta**3 + delta_w + cos(i)*delta_ohm) - (delta_u/eta**2)*(2*sin(f - f_u) + e/2*sin(2*f - f_u))
+w = delta_w*cos(theta - theta_w)
 
-# print("----------- Solution using the weakly ellipic Chief Orbits relative equations -----------")
-# print("\b")
-# # Case 1: f1 = f_0
-# f = f_0
-# theta = w + f
-# r = a*eta**2/(1 + e*cos(f))
-# delta_x = sqrt(e**2*delta_M**2/eta**2 + (delta_e + delta_a/a)**2)
-# delta_y = sqrt(3*delta_e**2 + e**2*(delta_M/eta - delta_w - cos(i))**2)
-# delta_z = sqrt(delta_i**2 + (sin(i)**2*delta_ohm**2))
-# fx = atan(e*delta_M/(-eta*(delta_e + delta_a/a)))
-# fy = atan(e*(delta_M/eta - delta_w - cos(i)*delta_ohm)/(-2*delta_e))
-# theta_z = atan(delta_i/(-sin(i)*delta_ohm))
-# fz = atan((cos(w)*delta_i + sin(w)*sin(i)*delta_ohm)/(sin(w)*delta_i - cos(w)*sin(i)*delta_ohm))
+rho_t_H = r*np.array([u,v,w])
+print("Method 2:   rho_t_H = ", rho_t_H/1000, "[km]")
 
-# x = delta_a + a*delta_x*cos(f - fx)
-# y = a*(delta_M/eta + delta_w + cos(i)*delta_ohm) - a*delta_y*sin(f - fy) - a*e/2*sin(2*f)*delta_e
-# z = a*delta_z*cos(theta - theta_z) -a*e/2*delta_z*cos(2*f - fz) - a*e/2*(sin(w)*delta_i - cos(w)*sin(i)*delta_ohm)
+# METHOD 3: Linearized mapping about chief orbit elements using matrix [A(oe)]
+print("\b")
+print("---------- METHOD 3: Linearized mapping about chief orbit elements using matrix [A(oe)] ----------")
+print("\b")
 
-# rho_0_H_weak = np.array([x,y,z])
-# print("rho_0_H_weak = [km] ", rho_0_H_weak/1000)
+# Initial conditions
+theta_0 = w + f_0
+q1 = e*cos(w)
+q2 = e*sin(w)
+A_oe_0 = OE_2_LVLH_linear_mapping_matrix_A(mu,a,theta_0,i,q1,q2,ohm)
+# differential orbit elements array
+delta_theta_0 = delta_w + (fd_0 - f_0)
+delta_q1 = delta_e*cos(w) - e*sin(w)*delta_w
+delta_q2 = delta_e*sin(w) + e*cos(w)*delta_w
+delta_oe_0 = np.array([delta_a,delta_theta_0,delta_i,delta_q1,delta_q2,delta_ohm])
+X_0 = np.dot(A_oe_0,delta_oe_0)
+Xrho_0_H = X_0[:3]
+print("Method 3:   rho_0_H = ", Xrho_0_H/1000, "[km]")
 
-# # # Case 2: f1 = f_0 + 60 degrees
-# # f = f_0 + 60*pi/180
-# # print("rho_1_H_weak = [km] ", rho_1_H_weak/1000)
-
-
-
+# Final conditions
+theta_t = w + f_0 + 60*pi/180
+A_oe_t = OE_2_LVLH_linear_mapping_matrix_A(mu,a,theta_t,i,q1,q2,ohm)
+# differential orbit elements array
+delta_theta_t = delta_w + (fd_t - f_t)
+delta_oe_t = np.array([delta_a,delta_theta_t,delta_i,delta_q1,delta_q2,delta_ohm])
+X_t = np.dot(A_oe_t,delta_oe_t)
+Xrho_t_H = X_t[:3]
+print("Method 3:   rho_0_H = ", Xrho_t_H/1000, "[km]")
